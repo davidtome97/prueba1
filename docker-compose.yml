@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:8
+    container_name: demojava-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: demo
+      MONGO_INITDB_ROOT_PASSWORD: demo
+    ports:
+      - "27017:27017"
+    networks:
+      - demo-net
+    restart: unless-stopped
+
+  demo-java:
+    build: .
+    container_name: demo-java-app
+    environment:
+      DB_ENGINE: mongo
+      DB_HOST: mongo
+      DB_PORT: 27017
+      DB_NAME: demo
+      DB_USER: demo
+      DB_PASSWORD: demo
+    ports:
+      - "8585:8081"
+    depends_on:
+      mongo:
+        condition: service_started
+    networks:
+      - demo-net
+    restart: unless-stopped
+
+networks:
+  demo-net:
+    driver: bridge
