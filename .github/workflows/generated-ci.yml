@@ -22,7 +22,7 @@ jobs:
       - name: Build & Test
         run: mvn -B -f pom.xml test
 
-    sonar:
+  sonar:
     runs-on: ubuntu-latest
     needs: build_and_test
     steps:
@@ -45,6 +45,8 @@ jobs:
             echo "Sonar secrets not configured. Skipping Sonar analysis."
             exit 0
           fi
+
+          SONAR_HOST_URL=${SONAR_HOST_URL:-https://sonarcloud.io}
 
           mvn -B -f pom.xml verify sonar:sonar \
             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
