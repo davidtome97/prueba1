@@ -22,10 +22,9 @@ jobs:
       - name: Build & Test
         run: mvn -B -f pom.xml test
 
-  sonar:
+    sonar:
     runs-on: ubuntu-latest
     needs: build_and_test
-    if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_PROJECT_KEY != '' && secrets.SONAR_ORGANIZATION != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,13 +34,18 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: SonarCloud Analysis
+      - name: SonarCloud Analysis (optional)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
+          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_PROJECT_KEY" ] || [ -z "$SONAR_ORGANIZATION" ]; then
+            echo "Sonar secrets not configured. Skipping Sonar analysis."
+            exit 0
+          fi
+
           mvn -B -f pom.xml verify sonar:sonar \
             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
             -Dsonar.organization=${SONAR_ORGANIZATION} \
