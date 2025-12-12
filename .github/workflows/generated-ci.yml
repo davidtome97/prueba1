@@ -46,9 +46,47 @@ jobs:
             exit 0
           fi
 
-          SONAR_HOST_URL=${SONAR_HOST_URL:-https://sonarcloud.io}
-
           mvn -B -f pom.xml verify sonar:sonar \
             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
             -Dsonar.organization=${SONAR_ORGANIZATION} \
             -Dsonar.host.url=${SONAR_HOST_URL}
+
+  build_and_push_ecr:
+    runs-on: ubuntu-latest
+    needs: build_and_test
+    # Si quieres que SOLO suba imagen cuando haga push a main (no en PR):
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Docker image
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          echo "Building image: ${IMAGE_URI}"
+          docker build -t "${IMAGE_URI}" .
+
+          echo "Tagging latest..."
+          docker tag "${IMAGE_URI}" "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+
+          echo "Pushing images..."
+          docker push "${IMAGE_URI}"
+          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+
+          echo "Done ✅"
