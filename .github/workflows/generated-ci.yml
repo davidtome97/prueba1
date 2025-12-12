@@ -20,11 +20,12 @@ jobs:
           java-version: 17
 
       - name: Build & Test
-        run: ./mvnw -B test
+        run: mvn -B -f pom.xml test
 
   sonar:
     runs-on: ubuntu-latest
     needs: build_and_test
+    if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_PROJECT_KEY != '' && secrets.SONAR_ORGANIZATION != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +42,7 @@ jobs:
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
-          ./mvnw -B verify sonar:sonar \
+          mvn -B -f pom.xml verify sonar:sonar \
             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
             -Dsonar.organization=${SONAR_ORGANIZATION} \
             -Dsonar.host.url=${SONAR_HOST_URL}
