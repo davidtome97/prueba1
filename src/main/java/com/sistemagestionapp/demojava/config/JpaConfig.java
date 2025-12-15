@@ -6,44 +6,42 @@ import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@Profile({"mysql", "postgres"})
 @EnableJpaRepositories(
         basePackages = "com.sistemagestionapp.demojava.repository",
         entityManagerFactoryRef = "entityManagerFactory",
         transactionManagerRef = "transactionManager"
 )
-
-
-@Configuration
-@Profile({"mysql","postgres"})
 public class JpaConfig {
-    @Value("${app.db.engine}")
+
+    @Value("${app.db.engine:mysql}")
     private String engine;
 
-    @Value("${app.db.host}")
+    @Value("${app.db.host:localhost}")
     private String host;
 
-    @Value("${app.db.port}")
+    @Value("${app.db.port:3306}")
     private int port;
 
-    @Value("${app.db.name}")
+    @Value("${app.db.name:demo}")
     private String dbName;
 
-    @Value("${app.db.user}")
+    @Value("${app.db.user:root}")
     private String user;
 
-    @Value("${app.db.password}")
+    @Value("${app.db.password:root}")
     private String password;
 
     @Value("${spring.jpa.hibernate.ddl-auto:create}")
@@ -53,14 +51,14 @@ public class JpaConfig {
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
 
-        String url;
-        String driverClassName;
+        final String url;
+        final String driverClassName;
 
         if ("postgres".equalsIgnoreCase(engine)) {
             url = String.format("jdbc:postgresql://%s:%d/%s", host, port, dbName);
             driverClassName = "org.postgresql.Driver";
         } else {
-            // Por defecto MySQL
+            // por defecto mysql
             url = String.format("jdbc:mysql://%s:%d/%s", host, port, dbName);
             driverClassName = "com.mysql.cj.jdbc.Driver";
         }
@@ -79,13 +77,12 @@ public class JpaConfig {
 
         emf.setDataSource(dataSource);
         emf.setPackagesToScan("com.sistemagestionapp.demojava.model");
-
-        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        emf.setJpaVendorAdapter(vendorAdapter);
+        emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
 
         Map<String, Object> props = new HashMap<>();
         props.put("hibernate.hbm2ddl.auto", ddlAuto);
 
+        // dialect
         if ("postgres".equalsIgnoreCase(engine)) {
             props.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         } else {
@@ -94,7 +91,6 @@ public class JpaConfig {
 
         emf.setJpaPropertyMap(props);
         emf.setPersistenceUnitName("default");
-
         return emf;
     }
 

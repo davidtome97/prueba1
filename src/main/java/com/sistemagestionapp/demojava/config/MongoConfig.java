@@ -5,43 +5,32 @@ import com.mongodb.client.MongoClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-
-
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("mongo")
 public class MongoConfig {
 
-    @Value("${spring.data.mongodb.host}")
+    @Value("${spring.data.mongodb.host:mongo}")
     private String mongoHost;
 
-    @Value("${spring.data.mongodb.port}")
+    @Value("${spring.data.mongodb.port:27017}")
     private int mongoPort;
 
-    @Value("${spring.data.mongodb.database}")
+    @Value("${spring.data.mongodb.database:demo}")
     private String mongoDatabase;
 
-    @Value("${spring.data.mongodb.username}")
+    @Value("${spring.data.mongodb.username:demo}")
     private String mongoUsername;
 
-    @Value("${spring.data.mongodb.password}")
+    @Value("${spring.data.mongodb.password:demo}")
     private String mongoPassword;
 
-    @Value("${spring.data.mongodb.authentication-database}")
+    @Value("${spring.data.mongodb.authentication-database:admin}")
     private String authDatabase;
 
-    @Override
-    protected String getDatabaseName() {
-        return mongoDatabase;
-    }
-
     @Bean
-    @Override
     public MongoClient mongoClient() {
-        // URI apuntando SIEMPRE al servicio Docker "mongo", con usuario/contraseña
         String uri = String.format(
                 "mongodb://%s:%s@%s:%d/%s?authSource=%s",
                 mongoUsername,
@@ -51,7 +40,6 @@ public class MongoConfig {
                 mongoDatabase,
                 authDatabase
         );
-
         return MongoClients.create(uri);
     }
 }
