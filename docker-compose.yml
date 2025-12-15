@@ -5,26 +5,27 @@ services:
     image: mongo:8
     container_name: demojava-mongo
     environment:
-      MONGO_INITDB_ROOT_USERNAME: demo
-      MONGO_INITDB_ROOT_PASSWORD: demo
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER:-demo}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD:-demo}
     ports:
-      - "27017:27017"
+      - "${DB_PORT:-27017}:27017"
     networks:
       - demo-net
     restart: unless-stopped
 
   demo-java:
+    image: ${IMAGE_URI:-demo-java-local}
     build: .
     container_name: demo-java-app
     environment:
-      DB_ENGINE: mongo
-      DB_HOST: mongo
-      DB_PORT: 27017
-      DB_NAME: demo
-      DB_USER: demo
-      DB_PASSWORD: demo
+      DB_ENGINE: ${DB_ENGINE:-mongo}
+      DB_HOST: ${DB_HOST:-mongo}
+      DB_PORT: ${DB_PORT:-27017}
+      DB_NAME: ${DB_NAME:-demo}
+      DB_USER: ${DB_USER:-demo}
+      DB_PASSWORD: ${DB_PASSWORD:-demo}
     ports:
-      - "8585:8081"
+      - "${APP_PORT:-8081}:8081"
     depends_on:
       mongo:
         condition: service_started
