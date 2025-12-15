@@ -15,7 +15,6 @@ services:
 
   demo-java:
     image: ${IMAGE_URI:-demo-java-local}
-    build: .
     container_name: demo-java-app
     environment:
       DB_ENGINE: ${DB_ENGINE:-mongo}
