@@ -7,8 +7,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
 @Configuration
-public class MongoConfig extends AbstractMongoClientConfiguration {
+@Profile("mongo")
+public class MongoConfig {
 
     @Value("${spring.data.mongodb.host}")
     private String mongoHost;
