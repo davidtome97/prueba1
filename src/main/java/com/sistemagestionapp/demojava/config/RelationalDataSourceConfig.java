@@ -6,10 +6,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Profile;
 
 import com.zaxxer.hikari.HikariDataSource;
 
 @Configuration
+@Profile("!mongo")
 @ConditionalOnProperty(name = "app.db.engine", havingValue = "mysql")
 class MySQLConfig {
 
@@ -32,6 +34,7 @@ class MySQLConfig {
 }
 
 @Configuration
+@Profile("!mongo")
 @ConditionalOnProperty(name = "app.db.engine", havingValue = "postgres")
 class PostgreSQLConfig {
 

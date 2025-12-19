@@ -11,6 +11,7 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -22,6 +23,8 @@ import java.util.Map;
         entityManagerFactoryRef = "entityManagerFactory",
         transactionManagerRef = "transactionManager"
 )
+@Profile("!mongo")
+@Configuration
 public class JpaConfig {
 
     @Value("${app.db.engine}")
