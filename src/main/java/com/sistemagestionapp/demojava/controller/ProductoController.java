@@ -12,7 +12,6 @@ import java.util.List;
 
 
 @Controller
-@Profile("!mongo")
 public class ProductoController {
 
     private final ProductoService productoService;

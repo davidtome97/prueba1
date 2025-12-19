@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.context.annotation.Profile;
 
 @Controller
-@Profile("!mongo")
 public class AuthController {
 
     private final UsuarioService usuarioService;
