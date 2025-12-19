@@ -39,9 +39,6 @@ public class UsuarioService implements UserDetailsService {
         return "mongo".equalsIgnoreCase(dbEngine);
     }
 
-    // =========================================================
-    // 1) SPRING SECURITY LOGIN
-    // =========================================================
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String correo) throws UsernameNotFoundException {
@@ -73,9 +70,6 @@ public class UsuarioService implements UserDetailsService {
                 .build();
     }
 
-    // =========================================================
-    // 2) USADO POR CONTROLADORES
-    // =========================================================
     @Transactional(readOnly = true)
     public boolean existePorCorreo(String correo) {
         if (isMongo()) {
@@ -88,20 +82,16 @@ public class UsuarioService implements UserDetailsService {
 
     @Transactional
     public void registrarUsuario(Usuario usuario) {
-
-        // Hash solo si NO parece BCrypt ya
-        String rawOrHash = usuario.getPassword();
-        if (rawOrHash != null && !(rawOrHash.startsWith("$2a$") || rawOrHash.startsWith("$2b$") || rawOrHash.startsWith("$2y$"))) {
-            PasswordEncoder encoder = passwordEncoderProvider.getIfAvailable();
-            if (encoder == null) {
-                throw new IllegalStateException("No hay PasswordEncoder disponible. Revisa WebSecurityConfig.");
-            }
-            usuario.setPassword(encoder.encode(rawOrHash));
+        PasswordEncoder encoder = passwordEncoderProvider.getIfAvailable();
+        if (encoder == null) {
+            throw new IllegalStateException("No hay PasswordEncoder disponible. Revisa PasswordConfig/WebSecurityConfig.");
         }
+
+        // ✅ en registro siempre llega password en claro
+        usuario.setPassword(encoder.encode(usuario.getPassword()));
 
         if (isMongo()) {
             if (usuarioMongoRepository == null) throw new IllegalStateException("UsuarioMongoRepository no disponible");
-
             if (usuarioMongoRepository.existsByCorreo(usuario.getCorreo())) return;
 
             UsuarioMongo um = new UsuarioMongo();
@@ -114,8 +104,8 @@ public class UsuarioService implements UserDetailsService {
         }
 
         if (usuarioRepository == null) throw new IllegalStateException("UsuarioRepository no disponible");
-
         if (usuarioRepository.existsByCorreo(usuario.getCorreo())) return;
+
         usuarioRepository.save(usuario);
     }
 }

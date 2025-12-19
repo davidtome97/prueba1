@@ -3,9 +3,8 @@ package com.sistemagestionapp.demojava.config;
 import com.sistemagestionapp.demojava.service.UsuarioService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -13,31 +12,29 @@ import org.springframework.security.web.SecurityFilterChain;
 public class WebSecurityConfig {
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public DaoAuthenticationProvider authenticationProvider(
+            UsuarioService usuarioService,
+            PasswordEncoder passwordEncoder
+    ) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(usuarioService); // ✅ usa tu UsuarioService
+        authProvider.setPasswordEncoder(passwordEncoder);   // ✅ BCrypt
+        return authProvider;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, UsuarioService usuarioService) throws Exception {
-
-        // Le decimos explícitamente a Spring Security que use tu UsuarioService (UserDetailsService)
-        http.userDetailsService(usuarioService);
-
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           DaoAuthenticationProvider authProvider) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .authenticationProvider(authProvider)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/login",
-                                "/registro",
-                                "/css/**",
-                                "/js/**",
-                                "/webjars/**"
-                        ).permitAll()
+                        .requestMatchers("/login", "/registro", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
+                .formLogin(login -> login
                         .loginPage("/login")
-                        .loginProcessingUrl("/login")   // POST aquí (lo procesa Spring Security)
+                        .loginProcessingUrl("/login") // ✅ POST /login lo maneja Spring Security
                         .usernameParameter("correo")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/productos", true)
@@ -48,8 +45,7 @@ public class WebSecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
-                )
-                .httpBasic(Customizer.withDefaults());
+                );
 
         return http.build();
     }
