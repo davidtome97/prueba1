@@ -6,10 +6,13 @@ import com.sistemagestionapp.demojava.service.ProductoService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.context.annotation.Profile;
 import java.util.List;
 
+
+
 @Controller
+@Profile("!mongo")
 public class ProductoController {
 
     private final ProductoService productoService;
