@@ -3,7 +3,6 @@ package com.sistemagestionapp.demojava.config;
 import com.sistemagestionapp.demojava.security.UsuarioDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,7 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@Profile("!mongo")
 public class WebSecurityConfig {
 
     private final UsuarioDetailsServiceImpl usuarioDetailsService;
@@ -35,6 +33,7 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
                 .authenticationProvider(authenticationProvider())
@@ -43,14 +42,15 @@ public class WebSecurityConfig {
                                 "/login",
                                 "/registro",
                                 "/css/**",
-                                "/js/**"
+                                "/js/**",
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
                         .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .usernameParameter("correo")   // nombre del input en el formulario
+                        .loginProcessingUrl("/login")   // <-- POST /login lo gestiona Spring Security
+                        .usernameParameter("correo")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/productos", true)
                         .failureUrl("/login?error")
