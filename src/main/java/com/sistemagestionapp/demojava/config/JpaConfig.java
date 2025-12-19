@@ -24,7 +24,6 @@ import java.util.Map;
         transactionManagerRef = "transactionManager"
 )
 @Profile("!mongo")
-@Configuration
 public class JpaConfig {
 
     @Value("${app.db.engine}")
