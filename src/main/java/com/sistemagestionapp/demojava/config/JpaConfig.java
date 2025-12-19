@@ -1,7 +1,5 @@
 package com.sistemagestionapp.demojava.config;
 
-package com.sistemagestionapp.demojava.config;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
@@ -28,46 +26,39 @@ import java.util.Map;
 )
 public class JpaConfig {
 
-    // 👉 Usamos tus variables DB_* (con defaults)
-    @Value("${DB_ENGINE:mysql}")
+    @Value("${app.db.engine:mysql}")
     private String engine;
 
-    @Value("${DB_HOST:localhost}")
+    @Value("${app.db.host:localhost}")
     private String host;
 
-    @Value("${DB_PORT:3306}")
+    @Value("${app.db.port:3306}")
     private int port;
 
-    @Value("${DB_NAME:demo}")
+    @Value("${app.db.name:demo}")
     private String dbName;
 
-    @Value("${DB_USER:demo}")
+    @Value("${app.db.user:root}")
     private String user;
 
-    @Value("${DB_PASSWORD:demo}")
+    @Value("${app.db.password:root}")
     private String password;
 
-    // ddl-auto se queda en properties por perfil (mysql/postgres)
     @Value("${spring.jpa.hibernate.ddl-auto:create}")
     private String ddlAuto;
-
-    @Value("${spring.jpa.show-sql:false}")
-    private boolean showSql;
 
     @Bean
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
 
-        String normalized = (engine == null ? "mysql" : engine.trim().toLowerCase());
+        String url;
+        String driverClassName;
 
-        final String url;
-        final String driverClassName;
-
-        if ("postgres".equals(normalized) || "postgresql".equals(normalized)) {
+        if ("postgres".equalsIgnoreCase(engine) || "postgresql".equalsIgnoreCase(engine)) {
             url = String.format("jdbc:postgresql://%s:%d/%s", host, port, dbName);
             driverClassName = "org.postgresql.Driver";
         } else {
-            // default: mysql
+            // por defecto mysql
             url = String.format("jdbc:mysql://%s:%d/%s", host, port, dbName);
             driverClassName = "com.mysql.cj.jdbc.Driver";
         }
@@ -76,10 +67,6 @@ public class JpaConfig {
         config.setDriverClassName(driverClassName);
         config.setUsername(user);
         config.setPassword(password);
-
-        // Ajustes recomendables
-        config.setMaximumPoolSize(10);
-        config.setPoolName("demo-hikari");
 
         return new HikariDataSource(config);
     }
@@ -90,26 +77,16 @@ public class JpaConfig {
 
         emf.setDataSource(dataSource);
         emf.setPackagesToScan("com.sistemagestionapp.demojava.model");
-        emf.setPersistenceUnitName("default");
-
-        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        vendorAdapter.setShowSql(showSql);
-        emf.setJpaVendorAdapter(vendorAdapter);
+        emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
 
         Map<String, Object> props = new HashMap<>();
         props.put("hibernate.hbm2ddl.auto", ddlAuto);
 
-        // Si quieres dejar que Hibernate detecte el dialect automáticamente,
-        // puedes borrar este bloque entero.
-        String normalized = (engine == null ? "mysql" : engine.trim().toLowerCase());
-        if ("postgres".equals(normalized) || "postgresql".equals(normalized)) {
+        if ("postgres".equalsIgnoreCase(engine) || "postgresql".equalsIgnoreCase(engine)) {
             props.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         } else {
             props.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         }
-
-        // Opcional pero útil
-        props.put("hibernate.jdbc.time_zone", "UTC");
 
         emf.setJpaPropertyMap(props);
         return emf;
