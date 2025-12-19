@@ -1,22 +1,3 @@
-package com.sistemagestionapp.demojava.service;
-
-import com.sistemagestionapp.demojava.model.Usuario;
-import com.sistemagestionapp.demojava.model.mongo.UsuarioMongo;
-import com.sistemagestionapp.demojava.repository.UsuarioRepository;
-import com.sistemagestionapp.demojava.repository.mongo.UsuarioMongoRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-
-@Profile("!mongo")
 @Service
 public class UsuarioService implements UserDetailsService {
 
@@ -37,18 +18,19 @@ public class UsuarioService implements UserDetailsService {
     }
 
     // =========================================================
-    // 1) USADO POR SPRING SECURITY (si se inyecta este servicio)
+    // 1) SPRING SECURITY LOGIN
     // =========================================================
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
 
         if (isMongo()) {
-            // LOGIN CONTRA MONGO
             UsuarioMongo usuario = usuarioMongoRepository
                     .findByCorreo(username)
                     .orElseThrow(() ->
-                            new UsernameNotFoundException("Usuario no encontrado en Mongo: " + username));
+                            new UsernameNotFoundException(
+                                    "Usuario no encontrado en Mongo: " + username));
 
             return new User(
                     usuario.getCorreo(),
@@ -56,11 +38,11 @@ public class UsuarioService implements UserDetailsService {
                     List.of(new SimpleGrantedAuthority("ROLE_USER"))
             );
         } else {
-            // LOGIN CONTRA SQL
             Usuario usuario = usuarioRepository
                     .findByCorreo(username)
                     .orElseThrow(() ->
-                            new UsernameNotFoundException("Usuario no encontrado en SQL: " + username));
+                            new UsernameNotFoundException(
+                                    "Usuario no encontrado en SQL: " + username));
 
             return new User(
                     usuario.getCorreo(),
@@ -71,7 +53,7 @@ public class UsuarioService implements UserDetailsService {
     }
 
     // =========================================================
-    // 2) USADO POR UsuarioDetailsServiceImpl (si sigues usándolo)
+    // 2) USADO POR CONTROLADORES
     // =========================================================
     @Transactional(readOnly = true)
     public Usuario buscarPorCorreo(String correo) {
@@ -80,7 +62,6 @@ public class UsuarioService implements UserDetailsService {
             return usuarioMongoRepository.findByCorreo(correo)
                     .map(um -> {
                         Usuario u = new Usuario();
-                        // el id en Mongo es String, aquí no lo necesitamos para login
                         u.setNombre(um.getNombre());
                         u.setCorreo(um.getCorreo());
                         u.setPassword(um.getPassword());
@@ -91,10 +72,6 @@ public class UsuarioService implements UserDetailsService {
             return usuarioRepository.findByCorreo(correo).orElse(null);
         }
     }
-
-    // =========================================================
-    // 3) USADO POR AuthController (registro de usuarios)
-    // =========================================================
 
     @Transactional(readOnly = true)
     public boolean existePorCorreo(String correo) {
@@ -109,11 +86,8 @@ public class UsuarioService implements UserDetailsService {
     @Transactional
     public void registrarUsuario(Usuario usuario) {
 
-        String correo = usuario.getCorreo();
-
         if (isMongo()) {
-            // ya existe -> no hacemos nada
-            if (usuarioMongoRepository.existsByCorreo(correo)) {
+            if (usuarioMongoRepository.existsByCorreo(usuario.getCorreo())) {
                 return;
             }
 
@@ -123,13 +97,10 @@ public class UsuarioService implements UserDetailsService {
             um.setPassword(usuario.getPassword());
 
             usuarioMongoRepository.save(um);
-
         } else {
-            // SQL
-            if (usuarioRepository.existsByCorreo(correo)) {
+            if (usuarioRepository.existsByCorreo(usuario.getCorreo())) {
                 return;
             }
-
             usuarioRepository.save(usuario);
         }
     }
