@@ -1,0 +1,44 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: demojava-mysql
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-demo}
+      MYSQL_USER: ${DB_USER:-demo}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-demo}
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    networks:
+      - demo-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    restart: unless-stopped
+
+  demo-java:
+    image: ${IMAGE_URI:-demo-java-local}
+    container_name: demo-java-app
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+
+      DB_ENGINE: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+
+      DB_NAME: ${DB_NAME:-demo}
+      DB_USER: ${DB_USER:-demo}
+      DB_PASSWORD: ${DB_PASSWORD:-demo}
+    ports:
+      - "${APP_PORT:-8081}:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - demo-net
+    restart: unless-stopped
+
+networks:
+  demo-net:
+    driver: bridge
