@@ -4,11 +4,13 @@ services:
     container_name: demojava-mysql
     environment:
       MYSQL_DATABASE: ${DB_NAME:-demo}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-demo}
+      MYSQL_USER: ${DB_USER:-demo}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-demo}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
     networks:
       - demo-net
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p${DB_PASSWORD:-demo} --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u${DB_USER:-demo} -p${DB_PASSWORD:-demo} --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -20,11 +22,9 @@ services:
     container_name: demo-java-app
     environment:
       SPRING_PROFILES_ACTIVE: mysql
-
       DB_ENGINE: mysql
       DB_HOST: mysql
       DB_PORT: 3306
-
       DB_NAME: ${DB_NAME:-demo}
       DB_USER: ${DB_USER:-demo}
       DB_PASSWORD: ${DB_PASSWORD:-demo}
