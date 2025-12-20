@@ -3,35 +3,33 @@ services:
     image: mysql:8
     container_name: demojava-mysql
     environment:
-      MYSQL_DATABASE: ${DB_NAME:-demo}
-      MYSQL_USER: ${DB_USER:-demo}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-demo}
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     networks:
       - demo-net
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
       timeout: 5s
-      retries: 20
-      start_period: 15s
+      retries: 30
+      start_period: 30s
     restart: unless-stopped
 
   demo-java:
-    image: ${IMAGE_URI:-demo-java-local}
+    image: ${IMAGE_URI}
     container_name: demo-java-app
     environment:
       SPRING_PROFILES_ACTIVE: mysql
-
       DB_ENGINE: mysql
       DB_HOST: mysql
       DB_PORT: 3306
-
-      DB_NAME: ${DB_NAME:-demo}
-      DB_USER: ${DB_USER:-demo}
-      DB_PASSWORD: ${DB_PASSWORD:-demo}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${APP_PORT:-8081}:8081"
+      - "${APP_PORT}:8081"
     depends_on:
       mysql:
         condition: service_healthy
