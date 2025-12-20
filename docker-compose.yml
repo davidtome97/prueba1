@@ -4,13 +4,11 @@ services:
     container_name: demojava-mysql
     environment:
       MYSQL_DATABASE: ${DB_NAME:-demo}
-      MYSQL_USER: ${DB_USER:-demo}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-demo}
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-demo}
     networks:
       - demo-net
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p${DB_PASSWORD:-demo} --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
