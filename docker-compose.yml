@@ -4,17 +4,18 @@ services:
     container_name: demojava-mysql
     environment:
       MYSQL_DATABASE: ${DB_NAME:-demo}
-      MYSQL_USER: ${DB_USER:-demo}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-demo}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
     networks:
       - demo-net
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u${DB_USER:-demo} -p${DB_PASSWORD:-demo} --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
       timeout: 5s
-      retries: 20
-      start_period: 15s
+      retries: 30
+      start_period: 30s
     restart: unless-stopped
 
   demo-java:
@@ -36,6 +37,9 @@ services:
     networks:
       - demo-net
     restart: unless-stopped
+
+volumes:
+  mysql-data:
 
 networks:
   demo-net:
